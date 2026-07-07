@@ -1,0 +1,51 @@
+// src/auth/auth.controller.ts
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger'; // Swagger decorators for API documentation
+
+@ApiTags('Auth') // Tags this controller for Swagger documentation
+@Controller('auth') // Sets base route to /api/v1/auth (due to global prefix in main.ts)
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  /**
+   * Handles new user registration.
+   * @param registerUserDto - User registration data.
+   * @returns Registered user details (excluding password).
+   */
+  @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'User successfully registered.',
+  })
+  @ApiBadRequestResponse({ description: 'Bad request or user with email already exists.' })
+  async register(@Body() registerUserDto: RegisterUserDto) {
+    return this.authService.register(registerUserDto);
+  }
+
+  /**
+   * Handles user login and provides a JWT access token.
+   * @param loginUserDto - User login credentials.
+   * @returns An object containing the JWT access token.
+   */
+  @Post('login')
+  @HttpCode(HttpStatus.OK) // Explicitly set HTTP status to 200 for successful login
+  @ApiOperation({ summary: 'Log in an existing user' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User successfully logged in and token provided.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
+  async login(@Body() loginUserDto: LoginUserDto) {
+    return this.authService.login(loginUserDto);
+  }
+}
